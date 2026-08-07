@@ -1,5 +1,7 @@
 import AlbumGallery from '@/components/AlbumGallery';
 
-export default function Page({ params }: { params: { token: string } }) {
-  return <AlbumGallery token={params.token} />;
+export default async function Page({ params }: { params: Promise<{ token: string }> }) {
+  const { token } = await params;
+
+  return <AlbumGallery token={token} />;
 }
