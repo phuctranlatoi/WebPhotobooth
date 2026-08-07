@@ -48,6 +48,7 @@ export async function POST(request: NextRequest) {
     const tokenHash = hashToken(token);
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + expiresInDays);
+    const albumBaseUrl = new URL('/a', request.nextUrl.origin).toString().replace(/\/$/, '');
 
     const album = await prisma.album.create({
       data: {
@@ -65,16 +66,14 @@ export async function POST(request: NextRequest) {
         booth_id: authResult.booth!.id,
         album_id: album.id,
         event_type: 'ALBUM_CREATED',
-        metadata: { expectedAssets, expiresInDays }
+        metadata: { expectedAssets, expiresInDays, albumBaseUrl }
       }
     });
-
-    const baseUrl = process.env.ALBUM_BASE_URL || 'http://localhost:3000/a';
     
     return NextResponse.json({
       albumId: album.id,
       accessToken: token,
-      albumUrl: `${baseUrl}/${token}`,
+      albumUrl: `${albumBaseUrl}/${token}`,
       status: album.status,
       expiresAt: album.expires_at.toISOString()
     }, { status: 201 });
