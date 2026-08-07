@@ -12,8 +12,8 @@ const finalizeSchema = z.object({
   format: z.string().min(1),
   resourceType: z.string().min(1),
   deliveryType: z.string().min(1),
-  width: z.number().int().positive(),
-  height: z.number().int().positive(),
+  width: z.number().int().nonnegative().default(0),
+  height: z.number().int().nonnegative().default(0),
   bytes: z.number().int().positive()
 });
 

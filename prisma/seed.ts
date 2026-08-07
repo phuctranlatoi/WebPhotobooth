@@ -11,12 +11,14 @@ const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  const apiKey = "booth_1_secret_key";
+  const apiKey = process.env.BOOTH_API_KEY || "booth_1_secret_key";
   const pepper = process.env.BOOTH_KEY_PEPPER || 'random_pepper_for_booth_key_hash';
   const hash = createHash('sha256').update(apiKey + pepper).digest('hex');
 
-  const booth = await prisma.booth.create({
-    data: {
+  const booth = await prisma.booth.upsert({
+    where: { api_key_hash: hash },
+    update: {},
+    create: {
       name: "Booth Demo",
       api_key_hash: hash,
       status: "ACTIVE"

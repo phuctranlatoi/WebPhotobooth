@@ -6,6 +6,8 @@ type Asset = {
   id: string;
   kind: string;
   position: number;
+  resourceType: string;
+  format: string;
   width: number;
   height: number;
   previewUrl: string;
@@ -32,9 +34,10 @@ export default function AlbumGallery({ token }: { token: string }) {
       .then((data: AlbumManifest) => {
         setManifest(data);
         if (data.assets && data.assets.length > 0) {
-          // Find FINAL or first asset
+          // Find FINAL, first image, or first asset.
           const finalAsset = data.assets.find(a => a.kind === 'FINAL');
-          setActiveAsset(finalAsset || data.assets[0]);
+          const firstImage = data.assets.find(a => a.resourceType === 'image');
+          setActiveAsset(finalAsset || firstImage || data.assets[0]);
         }
         setLoading(false);
       })
@@ -55,7 +58,7 @@ export default function AlbumGallery({ token }: { token: string }) {
 
   const handleDownloadAll = () => {
     manifest.assets.forEach(asset => {
-      window.open(`/api/v1/public/albums/${token}/assets/${asset.id}/download`, '_blank');
+      window.open(`/api/v1/public/albums/${token}/assets/${asset.id}/download?download=1`, '_blank');
     });
   };
 
@@ -73,18 +76,32 @@ export default function AlbumGallery({ token }: { token: string }) {
       <main className="flex-1 w-full max-w-4xl p-4 flex flex-col items-center justify-center">
         <div className="w-full h-[60vh] max-h-[800px] relative rounded-xl overflow-hidden shadow-2xl bg-black/50 border border-white/5 flex items-center justify-center">
           {activeAsset && (
-            <img 
-              key={activeAsset.id}
-              src={activeAsset.previewUrl} 
-              alt="Photobooth" 
-              className="w-full h-full object-contain drop-shadow-2xl"
-            />
+            activeAsset.resourceType === 'image' ? (
+              <img
+                key={activeAsset.id}
+                src={activeAsset.previewUrl}
+                alt="Photobooth"
+                className="w-full h-full object-contain drop-shadow-2xl"
+              />
+            ) : activeAsset.resourceType === 'video' ? (
+              <video
+                key={activeAsset.id}
+                src={activeAsset.previewUrl}
+                controls
+                className="w-full h-full object-contain drop-shadow-2xl"
+              />
+            ) : (
+              <div className="flex flex-col items-center gap-3 text-white">
+                <div className="text-lg font-semibold uppercase">{activeAsset.format}</div>
+                <div className="text-sm text-white/60">File goc tu lan chup {activeAsset.position + 1}</div>
+              </div>
+            )
           )}
         </div>
         
         <div className="mt-6 flex gap-4">
           <a 
-            href={activeAsset ? `/api/v1/public/albums/${token}/assets/${activeAsset.id}/download` : '#'}
+            href={activeAsset ? `/api/v1/public/albums/${token}/assets/${activeAsset.id}/download?download=1` : '#'}
             target="_blank" 
             rel="noreferrer"
             className="px-8 py-3 bg-white text-black font-semibold rounded-full hover:bg-gray-200 transition-all shadow-lg active:scale-95"
@@ -113,7 +130,15 @@ export default function AlbumGallery({ token }: { token: string }) {
                   isActive ? 'ring-2 ring-white ring-offset-2 ring-offset-neutral-900 scale-105' : 'opacity-60 hover:opacity-100 hover:scale-105'
                 }`}
               >
-                <img src={asset.previewUrl} className="w-full h-full object-cover" />
+                {asset.resourceType === 'image' ? (
+                  <img src={asset.previewUrl} alt="Photobooth thumbnail" className="w-full h-full object-cover" />
+                ) : asset.resourceType === 'video' ? (
+                  <video src={asset.previewUrl} className="w-full h-full object-cover" muted />
+                ) : (
+                  <div className="w-full h-full bg-neutral-800 flex items-center justify-center text-xs uppercase text-white/70">
+                    {asset.format}
+                  </div>
+                )}
                 <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-1">
                   <p className="text-[10px] font-medium text-center truncate text-white">{asset.kind}</p>
                 </div>

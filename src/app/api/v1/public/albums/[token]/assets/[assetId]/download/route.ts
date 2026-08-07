@@ -33,14 +33,16 @@ export async function GET(
     // Cloudinary private_download_url
     const ttl = parseInt(process.env.SIGNED_URL_TTL_SECONDS || '900', 10);
     const expiresAt = Math.round(Date.now() / 1000) + ttl;
+    const forceDownload = request.nextUrl.searchParams.get('download') === '1';
 
     const url = cloudinary.utils.private_download_url(
       asset.public_id,
       asset.format,
       {
+        resource_type: asset.resource_type,
         type: asset.delivery_type, // 'authenticated'
         expires_at: expiresAt,
-        attachment: true // Force download
+        attachment: forceDownload
       }
     );
 

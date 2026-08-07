@@ -22,7 +22,7 @@ export async function authenticateBooth(request: NextRequest) {
     }
 
     return { booth };
-  } catch (e) {
+  } catch {
     return { error: 'INTERNAL_ERROR', status: 500 };
   }
 }

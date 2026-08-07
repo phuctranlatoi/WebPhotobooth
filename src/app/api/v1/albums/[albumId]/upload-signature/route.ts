@@ -36,7 +36,7 @@ export async function POST(
       return NextResponse.json({ error: 'INVALID_REQUEST' }, { status: 400 });
     }
 
-    const { kind, position, format } = parseResult.data;
+    const { kind, position } = parseResult.data;
     
     // Create public_id: photobooth/{boothId}/{albumId}/{kind}/{position}
     const publicId = `photobooth/${album.booth_id}/${album.id}/${kind.toLowerCase()}/shot_${position}`;

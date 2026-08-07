@@ -23,7 +23,6 @@ export async function POST(
     }
 
     if (album.status === 'READY') {
-      const baseUrl = process.env.ALBUM_BASE_URL || 'http://localhost:3000/a';
       // Search the tokens, wait, the spec says "DB chỉ lưu SHA-256 hash của token". 
       // If we don't store the token in plaintext, we CANNOT reconstruct the albumUrl for idempotency.
       // But the Android app already has the token from the create response.
@@ -41,7 +40,7 @@ export async function POST(
     }
 
     // Check if expected assets count matches
-    const readyAssets = album.assets.filter((a: any) => a.status === 'READY').length;
+    const readyAssets = album.assets.filter((asset) => asset.status === 'READY').length;
     if (readyAssets < album.expected_assets) {
       console.warn(`Album ${albumId} has ${readyAssets}/${album.expected_assets} ready assets. Proceeding anyway to prevent lockup.`);
       // We will no longer block completion. We just complete it so the user can see whatever successfully uploaded.
@@ -51,7 +50,7 @@ export async function POST(
       }
     }
 
-    const updatedAlbum = await prisma.album.update({
+    await prisma.album.update({
       where: { id: albumId },
       data: {
         status: 'READY',

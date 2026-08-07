@@ -32,14 +32,16 @@ export async function GET(
       return NextResponse.json({ error: 'ALBUM_NOT_READY' }, { status: 409 });
     }
 
-    const assets = album.assets.filter((a: any) => a.status === 'READY').map((a: any) => ({
-      id: a.id,
-      kind: a.kind,
-      position: a.position,
-      width: a.width,
-      height: a.height,
+    const assets = album.assets.filter((asset) => asset.status === 'READY').map((asset) => ({
+      id: asset.id,
+      kind: asset.kind,
+      position: asset.position,
+      resourceType: asset.resource_type,
+      format: asset.format,
+      width: asset.width,
+      height: asset.height,
       // Create a short-lived signed URL for preview
-      previewUrl: `/api/v1/public/albums/${token}/assets/${a.id}/download` // We'll use the same route for now, or generate a real preview URL
+      previewUrl: `/api/v1/public/albums/${token}/assets/${asset.id}/download` // We'll use the same route for now, or generate a real preview URL
     }));
 
     return NextResponse.json({
