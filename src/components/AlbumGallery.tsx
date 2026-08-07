@@ -27,9 +27,13 @@ export default function AlbumGallery({ token }: { token: string }) {
 
   useEffect(() => {
     fetch(`/api/v1/public/albums/${token}`)
-      .then(res => {
-        if (!res.ok) throw new Error(res.statusText);
-        return res.json();
+      .then(async (res) => {
+        const data = await res.json().catch(() => null);
+        if (!res.ok) {
+          const apiError = data?.error || res.statusText || 'UNKNOWN_ERROR';
+          throw new Error(apiError);
+        }
+        return data;
       })
       .then((data: AlbumManifest) => {
         setManifest(data);
@@ -39,6 +43,16 @@ export default function AlbumGallery({ token }: { token: string }) {
           const firstImage = data.assets.find(a => a.resourceType === 'image');
           setActiveAsset(finalAsset || firstImage || data.assets[0]);
         }
+        const apiError = err instanceof Error ? err.message : 'UNKNOWN_ERROR';
+        const errorMessages: Record<string, string> = {
+          ALBUM_NOT_FOUND: 'Khong tim thay album. Hay chup lai phien moi de tao QR moi.',
+          ALBUM_NOT_READY: 'Album chua san sang. Anh da upload nhung metadata chua duoc luu vao web.',
+          ALBUM_EXPIRED: 'Album da het han.',
+          ALBUM_REVOKED: 'Album da bi khoa.',
+          ALBUM_DELETED: 'Album da bi xoa.',
+          INTERNAL_ERROR: 'Web album dang loi server. Kiem tra env DATABASE_URL va log Vercel.',
+        };
+        setError(errorMessages[apiError] || `Khong the tai album (${apiError}).`);
         setLoading(false);
       })
       .catch(err => {
