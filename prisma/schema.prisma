@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum BoothStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum AlbumStatus {
+  CREATED
+  UPLOADING
+  READY
+  REVOKED
+  EXPIRED
+  DELETING
+  DELETE_FAILED
+  DELETED
+}
+
+enum AssetKind {
+  ORIGINAL
+  FINAL
+  THUMBNAIL
+  GIF
+}
+
+enum AssetStatus {
+  PENDING
+  READY
+  DELETE_FAILED
+  DELETED
+}
+
+enum EventType {
+  ALBUM_CREATED
+  ASSET_FINALIZED
+  ALBUM_READY
+  VIEWED
+  DOWNLOAD_REQUESTED
+  REVOKED
+  CLEANUP_STARTED
+  CLEANUP_SUCCESS
+  CLEANUP_FAILED
+}
+
+model Booth {
+  id           String      @id @default(uuid())
+  name         String
+  api_key_hash String      @unique
+  status       BoothStatus @default(ACTIVE)
+  created_at   DateTime    @default(now())
+  albums       Album[]
+  audit_events AuditEvent[]
+
+  @@map("booths")
+}
+
+model Album {
+  id                  String      @id @default(uuid())
+  booth_id            String
+  external_session_id String
+  access_token_hash   String      @unique @db.Char(64)
+  status              AlbumStatus @default(CREATED)
+  expected_assets     Int
+  expires_at          DateTime
+  ready_at            DateTime?
+  deleted_at          DateTime?
+  created_at          DateTime    @default(now())
+  updated_at          DateTime    @updatedAt
+
+  booth        Booth         @relation(fields: [booth_id], references: [id], onDelete: Cascade)
+  assets       AlbumAsset[]
+  audit_events AuditEvent[]
+
+  @@unique([booth_id, external_session_id])
+  @@index([expires_at])
+  @@map("albums")
+}
+
+model AlbumAsset {
+  id                  String      @id @default(uuid())
+  album_id            String
+  kind                AssetKind
+  position            Int         @default(0)
+  cloudinary_asset_id String      @unique
+  public_id           String
+  resource_type       String
+  delivery_type       String
+  version             String
+  format              String
+  width               Int
+  height              Int
+  bytes               Int
+  checksum            String?
+  status              AssetStatus @default(PENDING)
+  created_at          DateTime    @default(now())
+
+  album Album @relation(fields: [album_id], references: [id], onDelete: Cascade)
+
+  @@map("album_assets")
+}
+
+model AuditEvent {
+  id          String    @id @default(uuid())
+  album_id    String?
+  booth_id    String?
+  event_type  EventType
+  request_id  String?
+  ip_hash     String?
+  user_agent  String?
+  metadata    Json?
+  created_at  DateTime  @default(now())
+
+  album Album? @relation(fields: [album_id], references: [id], onDelete: SetNull)
+  booth Booth? @relation(fields: [booth_id], references: [id], onDelete: SetNull)
+
+  @@map("audit_events")
+}
