@@ -12,7 +12,7 @@ const signatureSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { albumId: string } }
+  { params }: { params: Promise<{ albumId: string }> }
 ) {
   const authResult = await authenticateBooth(request);
   if (authResult.error) {
@@ -20,7 +20,7 @@ export async function POST(
   }
 
   try {
-    const { albumId } = params;
+    const { albumId } = await params;
     const album = await prisma.album.findUnique({ where: { id: albumId } });
     
     if (!album || album.booth_id !== authResult.booth!.id) {

@@ -4,7 +4,7 @@ import prisma from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { externalSessionId: string } }
+  { params }: { params: Promise<{ externalSessionId: string }> }
 ) {
   const authResult = await authenticateBooth(request);
   if (authResult.error) {
@@ -12,7 +12,7 @@ export async function GET(
   }
 
   try {
-    const { externalSessionId } = params;
+    const { externalSessionId } = await params;
     const album = await prisma.album.findUnique({
       where: {
         booth_id_external_session_id: {
@@ -27,7 +27,7 @@ export async function GET(
       return NextResponse.json({ error: 'ALBUM_NOT_FOUND' }, { status: 404 });
     }
 
-    const uploadedPositions = album.assets.map(a => a.position);
+    const uploadedPositions = album.assets.map((a: { position: number }) => a.position);
 
     return NextResponse.json({
       albumId: album.id,

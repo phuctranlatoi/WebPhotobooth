@@ -5,10 +5,10 @@ import cloudinary from '@/lib/cloudinary/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { token: string; assetId: string } }
+  { params }: { params: Promise<{ token: string; assetId: string }> }
 ) {
   try {
-    const { token, assetId } = params;
+    const { token, assetId } = await params;
     const tokenHash = hashToken(token);
 
     const album = await prisma.album.findUnique({

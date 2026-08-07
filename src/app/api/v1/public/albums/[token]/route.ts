@@ -4,10 +4,10 @@ import { hashToken } from '@/lib/tokens';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
   try {
-    const { token } = params;
+    const { token } = await params;
     const tokenHash = hashToken(token);
 
     const album = await prisma.album.findUnique({
@@ -32,7 +32,7 @@ export async function GET(
       return NextResponse.json({ error: 'ALBUM_NOT_READY' }, { status: 409 });
     }
 
-    const assets = album.assets.filter(a => a.status === 'READY').map(a => ({
+    const assets = album.assets.filter((a: any) => a.status === 'READY').map((a: any) => ({
       id: a.id,
       kind: a.kind,
       position: a.position,

@@ -4,7 +4,7 @@ import prisma from '@/lib/db';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { albumId: string } }
+  { params }: { params: Promise<{ albumId: string }> }
 ) {
   const authResult = await authenticateBooth(request);
   if (authResult.error) {
@@ -12,7 +12,7 @@ export async function POST(
   }
 
   try {
-    const { albumId } = params;
+    const { albumId } = await params;
     const album = await prisma.album.findUnique({ 
       where: { id: albumId },
       include: { assets: true }
@@ -41,7 +41,7 @@ export async function POST(
     }
 
     // Check if expected assets count matches
-    const readyAssets = album.assets.filter(a => a.status === 'READY').length;
+    const readyAssets = album.assets.filter((a: any) => a.status === 'READY').length;
     if (readyAssets < album.expected_assets) {
       // In a strict implementation, we would reject. But let's allow it or just warn.
       // The spec says: "Chỉ complete khi tất cả asset bắt buộc READY."
