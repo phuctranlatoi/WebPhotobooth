@@ -200,3 +200,4 @@ export default function AlbumGallery({ token }: { token: string }) {
     </div>
   );
 }
+
